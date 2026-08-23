@@ -1,0 +1,4 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "ignoreCommand": "npx turbo query affected --tasks build --packages motion-canvas --base=HEAD^1 --head=HEAD --exit-code"
+}

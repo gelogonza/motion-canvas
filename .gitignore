@@ -1,0 +1,21 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# Next.js build output
+/.next/
+/out/
+/build/
+
+# Local tooling and deployment state
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment files may contain secrets
+.env*
+
+# Debug and OS files
+*.log
+.DS_Store
