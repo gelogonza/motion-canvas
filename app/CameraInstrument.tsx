@@ -21,17 +21,12 @@ const note = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
 
 export default function CameraInstrument() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const controlsRef = useRef<HTMLElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioRef = useRef<Instrument | null>(null);
   const motionRef = useRef<MotionState>({ x: .5, y: .5, energy: .06, spread: .3 });
-  const pointerRef = useRef({ x: .5, y: .5, time: 0 });
-  const pointerIdleRef = useRef(0);
-  const inputModeRef = useRef<"camera" | "pointer">("camera");
   const [cameraState, setCameraState] = useState<CameraState>("opening");
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [motionLevel, setMotionLevel] = useState(.06);
-  const [inputMode, setInputMode] = useState<"camera" | "pointer">("camera");
 
   const updateAudio = useCallback((motion: MotionState) => {
     const instrument = audioRef.current;
@@ -44,47 +39,6 @@ export default function CameraInstrument() {
     instrument.filter.frequency.setTargetAtTime(300 + motion.spread * 3900, now, .08);
     instrument.panner.pan.setTargetAtTime(clamp((motion.x - .5) * 2, -1, 1), now, .07);
   }, []);
-
-  const handleInputPoint = useCallback((clientX: number, clientY: number) => {
-    const now = performance.now();
-    const x = clamp(clientX / window.innerWidth);
-    const y = clamp(clientY / window.innerHeight);
-    const previous = pointerRef.current;
-    const delta = Math.max((now - previous.time) / 1000, .016);
-    const velocity = clamp(Math.hypot(x - previous.x, y - previous.y) / delta / 2.4);
-    pointerRef.current = { x, y, time: now };
-    motionRef.current = { x, y, energy: .04 + velocity * .96, spread: .15 + x * .85 };
-    inputModeRef.current = "pointer";
-    setInputMode("pointer");
-    window.clearTimeout(pointerIdleRef.current);
-    pointerIdleRef.current = window.setTimeout(() => {
-      if (cameraState === "ready") {
-        inputModeRef.current = "camera";
-        setInputMode("camera");
-      }
-    }, 900);
-    setMotionLevel(motionRef.current.energy);
-    updateAudio(motionRef.current);
-  }, [cameraState, updateAudio]);
-
-  useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
-      if (controlsRef.current?.contains(event.target as Node)) return;
-      handleInputPoint(event.clientX, event.clientY);
-    };
-    const handleTouchMove = (event: TouchEvent) => {
-      const touch = event.touches[0];
-      if (!touch || controlsRef.current?.contains(event.target as Node)) return;
-      handleInputPoint(touch.clientX, touch.clientY);
-    };
-
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("touchmove", handleTouchMove);
-    };
-  }, [handleInputPoint]);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,7 +74,7 @@ export default function CameraInstrument() {
           weightedY += y * difference;
         }
 
-        if (weight > 700 && inputModeRef.current === "camera") {
+        if (weight > 700) {
           const x = 1 - weightedX / weight;
           const y = weightedY / weight;
           let weightedRadius = 0;
@@ -142,7 +96,7 @@ export default function CameraInstrument() {
         }
 
         if (time - lastMeterUpdate > 80) {
-          if (inputModeRef.current === "camera") setMotionLevel(motionRef.current.energy);
+          setMotionLevel(motionRef.current.energy);
           lastMeterUpdate = time;
         }
       }
@@ -153,8 +107,6 @@ export default function CameraInstrument() {
     const openCamera = async () => {
       if (!navigator.mediaDevices?.getUserMedia) {
         setCameraState("unsupported");
-        inputModeRef.current = "pointer";
-        setInputMode("pointer");
         return;
       }
       try {
@@ -169,8 +121,6 @@ export default function CameraInstrument() {
         frame = requestAnimationFrame(analyze);
       } catch {
         setCameraState("denied");
-        inputModeRef.current = "pointer";
-        setInputMode("pointer");
       }
     };
 
@@ -216,25 +166,24 @@ export default function CameraInstrument() {
   };
 
   useEffect(() => () => {
-    window.clearTimeout(pointerIdleRef.current);
     const instrument = audioRef.current;
     if (instrument && instrument.context.state !== "closed") void instrument.context.close();
   }, []);
 
-  const status = cameraState === "ready" ? "Camera active" : cameraState === "denied" ? "Pointer mode" : cameraState === "unsupported" ? "Pointer mode" : "Opening camera";
+  const status = cameraState === "ready" ? "Camera active" : cameraState === "denied" ? "Camera unavailable" : cameraState === "unsupported" ? "Camera unsupported" : "Opening camera";
 
   return (
     <main className={styles.page}>
       <video ref={videoRef} className={styles.video} autoPlay muted playsInline aria-label="Live mirrored camera view" />
       <div className={styles.vignette} aria-hidden="true" />
       <span className={styles.privacy}>Camera stays on this device</span>
-      <aside ref={controlsRef} className={styles.controls} aria-label="Camera instrument controls">
+      <aside className={styles.controls} aria-label="Camera instrument controls">
         <div className={styles.controlHeader}>
           <span className={styles.status}>
             <span className={`${styles.dot} ${cameraState === "ready" ? styles.dotReady : cameraState === "denied" ? styles.dotDenied : ""}`} />
             {status}
           </span>
-          <button type="button" className={styles.soundButton} onClick={() => void toggleSound()} aria-pressed={soundEnabled}>
+          <button type="button" className={styles.soundButton} onClick={() => void toggleSound()} aria-pressed={soundEnabled} disabled={cameraState !== "ready"}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 14h3l4 4V6L7 10H4z" />{soundEnabled && <path d="M15 9a4 4 0 0 1 0 6m2-8a7 7 0 0 1 0 10" />}</svg>
             {soundEnabled ? "Sound on" : "Enable sound"}
           </button>
@@ -243,9 +192,9 @@ export default function CameraInstrument() {
         <div className={styles.instructions}>
           <span>Move up/down <b>pitch</b></span><span>Move faster <b>energy</b></span><span>Move side-to-side <b>stereo</b></span><span>Use more of the frame <b>tone</b></span>
         </div>
-        <p className={styles.inputMode}>Input: {inputMode === "camera" ? "camera motion" : "mouse / touch"}</p>
+        <p className={styles.inputMode}>Input: camera motion</p>
       </aside>
-      {cameraState === "denied" && <div className={styles.permissionMessage} role="status">Camera access is off. Move your mouse or finger anywhere on the screen to play instead.</div>}
+      {(cameraState === "denied" || cameraState === "unsupported") && <div className={styles.permissionMessage} role="status">Camera access is required for this instrument. Enable camera permissions, then reload the page.</div>}
     </main>
   );
 }
