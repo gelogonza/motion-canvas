@@ -254,8 +254,12 @@ export default function CameraInstrument() {
           </button>
         </div>
         <div className={styles.motionMeter} aria-label={`Motion level ${Math.round(motionLevel * 100)} percent`}><span style={{ transform: `scaleX(${Math.max(.025, motionLevel)})` }} /></div>
+        <p className={styles.controlLabel}>Movement controls</p>
         <div className={styles.instructions}>
-          <span>Move up/down <b>pitch steps</b></span><span>Move faster <b>bend + energy</b></span><span>Move side-to-side <b>harmony + stereo</b></span><span>Move wider <b>tone + waveform</b></span>
+          <span className={styles.instruction}><i aria-hidden="true">↕</i><span>Hand / finger height<b>Pitch steps</b></span></span>
+          <span className={styles.instruction}><i aria-hidden="true">↔</i><span>Side-to-side position<b>Harmony + stereo</b></span></span>
+          <span className={styles.instruction}><i aria-hidden="true">≈</i><span>Movement speed<b>Bend + energy</b></span></span>
+          <span className={styles.instruction}><i aria-hidden="true">⇱</i><span>Finger / hand spread<b>Tone + wave shape</b></span></span>
         </div>
         <p className={styles.inputMode}>Input: camera motion</p>
       </aside>
