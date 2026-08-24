@@ -7,11 +7,9 @@ export default function Home() {
       <div className="landingGlow landingGlowTwo" aria-hidden="true" />
       <header className="landingHeader">
         <span className="wordmark">Motion Canvas</span>
-        <span className="availability"><i /> Camera instrument</span>
       </header>
 
       <section className="landingHero">
-        <p className="eyebrow">Movement becomes music</p>
         <h1>Move your body.<br />Shape the sound.</h1>
         <p className="landingIntro">
           An audiovisual instrument that turns motion captured by your camera into shifting tones, stereo movement, and responsive sound waves.
@@ -28,10 +26,6 @@ export default function Home() {
         </svg>
       </div>
 
-      <footer className="landingFooter">
-        <span>No recording. Camera processing stays on-device.</span>
-        <span>Headphones recommended</span>
-      </footer>
     </main>
   );
 }
