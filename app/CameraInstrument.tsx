@@ -19,6 +19,8 @@ type Instrument = {
 
 const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const note = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
+const pitchScale = [43, 46, 48, 50, 53, 55, 58, 60, 62, 65, 67, 70, 72];
+const harmonyIntervals = [0, 3, 7, 12];
 
 export default function CameraInstrument() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -51,11 +53,14 @@ export default function CameraInstrument() {
       context.clearRect(0, 0, width, height);
 
       const motion = motionRef.current;
-      const centerY = height * (.5 + (motion.y - .5) * .22);
-      const amplitude = 20 + motion.energy * Math.min(180, height * .22);
+      const stageTop = Math.min(280, Math.max(190, height * .3));
+      const stageHeight = height - stageTop;
+      const centerY = stageTop + stageHeight * (.52 + (motion.y - .5) * .2);
+      const amplitude = 18 + motion.energy * Math.min(190, stageHeight * .34);
       const frequency = 1.8 + motion.spread * 3.8;
       const speed = time * (.00045 + motion.energy * .0022);
-      const colors = ["rgba(143,238,255,.92)", "rgba(181,140,255,.74)", "rgba(255,255,255,.52)"];
+      const hueShift = motion.x * 72;
+      const colors = [`hsla(${186 + hueShift},100%,72%,.94)`, `hsla(${250 + hueShift},94%,72%,.78)`, `hsla(${315 + hueShift},95%,72%,.58)`, "rgba(255,255,255,.42)"];
 
       colors.forEach((color, layer) => {
         context.beginPath();
@@ -63,12 +68,13 @@ export default function CameraInstrument() {
           const normalized = x / width;
           const envelope = Math.sin(Math.PI * normalized) ** 1.35;
           const wave = Math.sin(normalized * Math.PI * 2 * (frequency + layer * .36) + speed * (layer + 1) * 3.5);
-          const detail = Math.sin(normalized * Math.PI * 2 * (frequency * 2.6) - speed * 2.1) * motion.energy * 16;
-          const y = centerY + (wave * amplitude + detail) * envelope + (layer - 1) * 15;
+          const detail = Math.sin(normalized * Math.PI * 2 * (frequency * 2.6 + motion.x * 2) - speed * 2.1) * motion.energy * 20;
+          const pulse = Math.sin(normalized * Math.PI * 8 - speed * 7) * motion.energy * motion.spread * 12;
+          const y = centerY + (wave * amplitude + detail + pulse) * envelope + (layer - 1.5) * 16;
           if (x === -8) context.moveTo(x, y); else context.lineTo(x, y);
         }
         context.strokeStyle = color;
-        context.lineWidth = layer === 0 ? 2.2 : 1;
+        context.lineWidth = layer === 0 ? 2.4 : 1;
         context.shadowColor = color;
         context.shadowBlur = layer === 0 ? 18 + motion.energy * 28 : 8;
         context.stroke();
@@ -85,8 +91,12 @@ export default function CameraInstrument() {
     const instrument = audioRef.current;
     if (!instrument) return;
     const now = instrument.context.currentTime;
-    instrument.primary.frequency.setTargetAtTime(note(43 + (1 - motion.y) * 35), now, .055);
-    instrument.harmonic.frequency.setTargetAtTime(note(51 + (1 - motion.y) * 29), now, .075);
+    const pitchIndex = Math.round((1 - motion.y) * (pitchScale.length - 1));
+    const rootPitch = pitchScale[pitchIndex];
+    const harmonyIndex = Math.min(harmonyIntervals.length - 1, Math.floor(motion.x * harmonyIntervals.length));
+    const movementBend = (motion.energy - .3) * 1.7;
+    instrument.primary.frequency.setTargetAtTime(note(rootPitch + movementBend), now, .055);
+    instrument.harmonic.frequency.setTargetAtTime(note(rootPitch + harmonyIntervals[harmonyIndex]), now, .075);
     instrument.primaryGain.gain.setTargetAtTime(.012 + motion.energy * .1, now, .085);
     instrument.harmonicGain.gain.setTargetAtTime((.008 + motion.energy * .068) * (.55 + motion.spread), now, .1);
     instrument.filter.frequency.setTargetAtTime(300 + motion.spread * 3900, now, .08);
@@ -245,7 +255,7 @@ export default function CameraInstrument() {
         </div>
         <div className={styles.motionMeter} aria-label={`Motion level ${Math.round(motionLevel * 100)} percent`}><span style={{ transform: `scaleX(${Math.max(.025, motionLevel)})` }} /></div>
         <div className={styles.instructions}>
-          <span>Move up/down <b>pitch</b></span><span>Move faster <b>energy</b></span><span>Move side-to-side <b>stereo</b></span><span>Use more of the frame <b>tone</b></span>
+          <span>Move up/down <b>pitch steps</b></span><span>Move faster <b>bend + energy</b></span><span>Move side-to-side <b>harmony + stereo</b></span><span>Move wider <b>tone + waveform</b></span>
         </div>
         <p className={styles.inputMode}>Input: camera motion</p>
       </aside>
