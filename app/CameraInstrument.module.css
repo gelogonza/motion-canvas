@@ -1,6 +1,9 @@
 .page { position: fixed; inset: 0; overflow: hidden; background: #000; color: #fff; }
 .video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); filter: saturate(.82) contrast(1.08); }
+.waveCanvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; mix-blend-mode: screen; }
 .vignette { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg,rgba(0,0,0,.24),transparent 24%,transparent 68%,rgba(0,0,0,.46)),radial-gradient(circle at center,transparent 48%,rgba(0,0,0,.25)); }
+.backLink { position: absolute; top: 20px; left: 24px; z-index: 2; padding: 9px 12px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; background: rgba(0,0,0,.28); color: rgba(255,255,255,.78); font-size: 9px; letter-spacing: .1em; text-decoration: none; text-transform: uppercase; backdrop-filter: blur(14px); }
+.backLink:hover,.backLink:focus-visible { color: #fff; border-color: rgba(143,238,255,.65); outline: none; }
 .privacy { position: absolute; top: 22px; right: 24px; color: rgba(255,255,255,.58); font-size: 8px; letter-spacing: .11em; text-transform: uppercase; }
 .controls { position: absolute; right: 24px; bottom: 24px; width: min(410px,calc(100% - 48px)); padding: 16px; border: 1px solid rgba(255,255,255,.2); border-radius: 12px; background: rgba(0,0,0,.64); box-shadow: 0 18px 60px rgba(0,0,0,.3); backdrop-filter: blur(18px); cursor: default; }
 .controlHeader { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -19,4 +22,4 @@
 .instructions b { color: #fff; font-weight: 500; }
 .inputMode { margin: 12px 0 0; color: rgba(255,255,255,.45); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; }
 .permissionMessage { position: absolute; left: 50%; top: 50%; width: min(430px,calc(100% - 40px)); padding: 18px 20px; transform: translate(-50%,-50%); border: 1px solid rgba(255,255,255,.2); border-radius: 10px; background: rgba(0,0,0,.78); text-align: center; font-size: 12px; line-height: 1.5; backdrop-filter: blur(16px); }
-@media (max-width:640px) { .privacy { top: 14px; right: 14px; } .controls { right: 12px; bottom: 12px; width: calc(100% - 24px); padding: 14px; } .instructions { grid-template-columns: 1fr; gap: 5px; } }
+@media (max-width:640px) { .backLink { top: 12px; left: 12px; } .privacy { top: 22px; right: 14px; max-width: 130px; text-align: right; } .controls { right: 12px; bottom: 12px; width: calc(100% - 24px); padding: 14px; } .instructions { grid-template-columns: 1fr 1fr; gap: 6px 10px; } }

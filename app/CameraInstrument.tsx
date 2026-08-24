@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import styles from "./CameraInstrument.module.css";
 
 type CameraState = "opening" | "ready" | "denied" | "unsupported";
@@ -21,12 +22,64 @@ const note = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
 
 export default function CameraInstrument() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioRef = useRef<Instrument | null>(null);
   const motionRef = useRef<MotionState>({ x: .5, y: .5, energy: .06, spread: .3 });
   const [cameraState, setCameraState] = useState<CameraState>("opening");
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [motionLevel, setMotionLevel] = useState(.06);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const context = canvas.getContext("2d");
+    if (!context) return;
+    let frame = 0;
+
+    const render = (time: number) => {
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      if (canvas.width !== width * pixelRatio || canvas.height !== height * pixelRatio) {
+        canvas.width = width * pixelRatio;
+        canvas.height = height * pixelRatio;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+      }
+      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      context.clearRect(0, 0, width, height);
+
+      const motion = motionRef.current;
+      const centerY = height * (.5 + (motion.y - .5) * .22);
+      const amplitude = 20 + motion.energy * Math.min(180, height * .22);
+      const frequency = 1.8 + motion.spread * 3.8;
+      const speed = time * (.00045 + motion.energy * .0022);
+      const colors = ["rgba(143,238,255,.92)", "rgba(181,140,255,.74)", "rgba(255,255,255,.52)"];
+
+      colors.forEach((color, layer) => {
+        context.beginPath();
+        for (let x = -8; x <= width + 8; x += 7) {
+          const normalized = x / width;
+          const envelope = Math.sin(Math.PI * normalized) ** 1.35;
+          const wave = Math.sin(normalized * Math.PI * 2 * (frequency + layer * .36) + speed * (layer + 1) * 3.5);
+          const detail = Math.sin(normalized * Math.PI * 2 * (frequency * 2.6) - speed * 2.1) * motion.energy * 16;
+          const y = centerY + (wave * amplitude + detail) * envelope + (layer - 1) * 15;
+          if (x === -8) context.moveTo(x, y); else context.lineTo(x, y);
+        }
+        context.strokeStyle = color;
+        context.lineWidth = layer === 0 ? 2.2 : 1;
+        context.shadowColor = color;
+        context.shadowBlur = layer === 0 ? 18 + motion.energy * 28 : 8;
+        context.stroke();
+      });
+      context.shadowBlur = 0;
+      frame = requestAnimationFrame(render);
+    };
+
+    frame = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   const updateAudio = useCallback((motion: MotionState) => {
     const instrument = audioRef.current;
@@ -175,7 +228,9 @@ export default function CameraInstrument() {
   return (
     <main className={styles.page}>
       <video ref={videoRef} className={styles.video} autoPlay muted playsInline aria-label="Live mirrored camera view" />
+      <canvas ref={canvasRef} className={styles.waveCanvas} aria-hidden="true" />
       <div className={styles.vignette} aria-hidden="true" />
+      <Link className={styles.backLink} href="/">← Home</Link>
       <span className={styles.privacy}>Camera stays on this device</span>
       <aside className={styles.controls} aria-label="Camera instrument controls">
         <div className={styles.controlHeader}>

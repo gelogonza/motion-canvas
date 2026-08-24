@@ -1,4 +1,27 @@
 * { box-sizing: border-box; }
-html, body { width: 100%; min-height: 100%; margin: 0; overflow: hidden; background: #000; }
+html, body { width: 100%; min-height: 100%; margin: 0; background: #030405; }
 body { color: #fff; font-family: Arial, Helvetica, sans-serif; -webkit-font-smoothing: antialiased; }
 button, a { color: inherit; font: inherit; }
+.landingPage { position: relative; min-height: 100svh; overflow: hidden; padding: 28px 40px; background: radial-gradient(circle at 50% 45%,#111625 0,transparent 42%),#030405; }
+.landingHeader,.landingFooter { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; text-transform: uppercase; letter-spacing: .12em; }
+.landingHeader { font-size: 10px; }
+.wordmark { font-weight: 700; color: #fff; }
+.availability { display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,.52); }
+.availability i { width: 6px; height: 6px; border-radius: 50%; background: #82ffd1; box-shadow: 0 0 12px #82ffd1; }
+.landingHero { position: relative; z-index: 3; width: min(840px,90vw); margin: clamp(130px,20vh,230px) auto 0; text-align: center; }
+.eyebrow { margin: 0 0 22px; color: #8feeff; font-size: 10px; letter-spacing: .17em; text-transform: uppercase; }
+.landingHero h1 { margin: 0; font-size: clamp(58px,8.2vw,126px); font-weight: 400; letter-spacing: -.065em; line-height: .88; }
+.landingIntro { width: min(590px,100%); margin: 30px auto 0; color: rgba(255,255,255,.58); font-size: clamp(14px,1.2vw,17px); line-height: 1.55; }
+.startButton { display: inline-flex; align-items: center; gap: 28px; margin-top: 34px; padding: 14px 17px; border: 1px solid rgba(143,238,255,.42); border-radius: 999px; background: rgba(143,238,255,.07); color: #fff; font-size: 11px; letter-spacing: .08em; text-decoration: none; text-transform: uppercase; transition: background .2s ease,border-color .2s ease,transform .2s ease; }
+.startButton:hover,.startButton:focus-visible { transform: translateY(-2px); border-color: #8feeff; background: rgba(143,238,255,.14); outline: none; }
+.landingWave { position: absolute; z-index: 1; right: -5vw; bottom: 7vh; left: -5vw; height: 260px; opacity: .5; }
+.landingWave svg { width: 100%; height: 100%; overflow: visible; }
+.landingWave path { fill: none; stroke: #8feeff; stroke-width: 1; filter: drop-shadow(0 0 12px rgba(143,238,255,.8)); animation: waveDrift 7s ease-in-out infinite alternate; }
+.landingWave path + path { stroke: #b58cff; opacity: .55; animation-duration: 9s; animation-direction: alternate-reverse; }
+.landingGlow { position: absolute; width: 42vw; aspect-ratio: 1; border-radius: 50%; filter: blur(90px); opacity: .12; }
+.landingGlowOne { top: -25vw; left: -10vw; background: #7a5cff; }
+.landingGlowTwo { right: -18vw; bottom: -25vw; background: #52d7ff; }
+.landingFooter { position: absolute; right: 40px; bottom: 26px; left: 40px; color: rgba(255,255,255,.36); font-size: 8px; }
+@keyframes waveDrift { from { transform: translate3d(-1.5%,8px,0) scaleY(.9); } to { transform: translate3d(1.5%,-8px,0) scaleY(1.08); } }
+@media (max-width: 640px) { .landingPage { padding: 20px; } .landingHeader { align-items: flex-start; } .availability { max-width: 120px; justify-content: flex-end; text-align: right; line-height: 1.35; } .landingHero { margin-top: 22vh; text-align: left; } .landingHero h1 { font-size: clamp(54px,16vw,82px); } .landingIntro { margin-left: 0; } .startButton { margin-top: 28px; } .landingWave { bottom: 15vh; height: 190px; } .landingFooter { right: 20px; bottom: 18px; left: 20px; gap: 20px; align-items: flex-end; line-height: 1.45; } .landingFooter span:last-child { text-align: right; } }
+@media (prefers-reduced-motion: reduce) { .landingWave path { animation: none; } .startButton { transition: none; } }
